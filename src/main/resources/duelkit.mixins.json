@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.github.pointofpressure.duelkit.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["LocalPlayerMixin", "MultiPlayerGameModeAccessor", "MultiPlayerGameModeMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

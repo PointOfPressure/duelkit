@@ -14,19 +14,30 @@ public final class Config {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static Config get = new Config();
 
+    /** Small "D" button left of Options... in the pause menu. */
+    public boolean pauseMenuButton = true;
+    /** No pop-ups in the top right: chat verification warnings, recipe unlocks, advancements, tutorials. */
+    public boolean hideToasts = true;
+    /** Size of the totem pop animation, 1 = vanilla. */
+    public double totemPopSize = 0.4;
     public Swaps swaps = new Swaps();
     public AutoAttack autoAttack = new AutoAttack();
     public AimAssist aimAssist = new AimAssist();
     public FastThrow fastThrow = new FastThrow();
     public WindJump windJump = new WindJump();
     public BucketClutch bucketClutch = new BucketClutch();
+    public PearlCatch pearlCatch = new PearlCatch();
+    public QuickUse quickUse = new QuickUse();
+    public HoldToEat holdToEat = new HoldToEat();
+    /** Hold the loadout key (K) for the loadout panel. */
+    public boolean loadouts = true;
 
     public static final class Swaps {
         public boolean enabled = true;
         /** Held items swaps start from: sword, axe, spear, mace, trident, empty. */
         public List<String> holding = new ArrayList<>(List.of("sword", "axe"));
         public SpearReach spearReach = SpearReach.WHEN_NEEDED;
-        /** Falling at least minFall blocks: hit with the mace (Density preferred). */
+        /** Falling at least minFall blocks: hit with whichever hotbar mace deals the most damage. */
         public boolean maceWhenFalling = true;
         public double minFall = 1.5;
         public boolean maceOnMobs = true;
@@ -37,6 +48,8 @@ public final class Config {
         public boolean axeOnShields = true;
         /** ...then, if falling, the mace in the same tick. */
         public boolean stunSlam = true;
+        /** Use the axe whenever they hold a shield, not only once it is raised: good players raise it as your hit arrives. */
+        public boolean axeWhenShieldHeld = true;
         public SwapBack swapBack = SwapBack.SAME_TICK;
         public int delayMin = 2;
         public int delayMax = 4;
@@ -58,7 +71,11 @@ public final class Config {
         public double charge = 1.0;
         /** ...counted this many ticks ahead, so the hit lands on the server's first charged tick. */
         public double leadTicks = 0.5;
+        /** In the air and still rising: hold the hit until you start falling, so it crits. */
+        public boolean waitForCrits = true;
         // advanced
+        /** Longest a hit is held back for a crit, in ticks. */
+        public int critMaxWait = 8;
         /** Keep attacking while eating, drinking or blocking. */
         public boolean whileUsingItem = false;
         /** Only while the attack key is held. */
@@ -70,14 +87,18 @@ public final class Config {
         public boolean players = true;
         public boolean hostiles = true;
         /** Cone width in degrees. */
-        public double cone = 40;
+        public double cone = 30;
         public double range = 6.0;
+        /** Sphere: range is straight-line distance. Column: range is horizontal only, height is limited by verticalRange. */
+        public RangeShape rangeShape = RangeShape.SPHERE;
+        /** Column only: how far above or below a target may be. 0 = no limit. */
+        public double verticalRange = 0;
         /** Extra turn toward the target, as a share of your own mouse movement toward it. */
-        public double pull = 0.5;
+        public double pull = 0.4;
         /** How much your own turning is slowed while the crosshair is on the target. */
-        public double stickiness = 0.35;
+        public double stickiness = 0.25;
         /** Share of the target's movement across your screen that is followed while you are on it. */
-        public double tracking = 0.6;
+        public double tracking = 0.5;
 
         /** Mace dive: falling onto a target, the hardest aim in the game. Stronger, wider, and it pulls on its own. */
         public boolean dive = true;
@@ -86,7 +107,7 @@ public final class Config {
         public double diveRange = 12.0;
         public double diveTracking = 1.0;
         /** Pulls toward the target even with your hand still. Fraction of the gap closed per second is 1 - e^-magnet. */
-        public double diveMagnet = 8.0;
+        public double diveMagnet = 6.0;
 
         // advanced
         /** Aim this far inside the hitbox edge, in blocks. */
@@ -122,12 +143,42 @@ public final class Config {
         public boolean enabled = true;
         /** Only for falls longer than this many blocks. */
         public double minFall = 3.0;
+        /** Skip falls that would not hurt: wind launches, slow falling, feather falling, soft landings. */
+        public boolean onlyIfItHurts = true;
+        /** Once landed, pick the water back up (look at it). */
+        public boolean pickUp = true;
+    }
+
+    public static final class PearlCatch {
+        public boolean enabled = true;
+        /** Ticks between the pearl and the wind charge; 0 = same tick, straight after. */
+        public int delayTicks = 0;
+        /** Throw the wind charge straight down instead of after the pearl. */
+        public boolean atFeet = false;
+    }
+
+    public static final class HoldToEat {
+        public boolean enabled = true;
+        public boolean goldenApples = true;
+        public boolean anyFood = false;
+    }
+
+    public static final class QuickUse {
+        public boolean enabled = true;
+        public boolean windCharges = true;
+        public boolean enderPearls = true;
     }
 
     public enum SpearReach {
         OFF("Off"), WHEN_NEEDED("When out of reach"), ALWAYS("Every hit");
         public final String label;
         SpearReach(String label) { this.label = label; }
+    }
+
+    public enum RangeShape {
+        SPHERE("Sphere"), COLUMN("Column");
+        public final String label;
+        RangeShape(String label) { this.label = label; }
     }
 
     public enum SwapBack {

@@ -54,9 +54,14 @@ public final class Swaps {
         boolean swapHit = hit >= 0 && hit != held;
         if (cfg().debugLog) {
             double dist = p.getEyePosition().distanceTo(target.getBoundingBox().getCenter());
-            Duelkit.LOG.info("hit {} at {} blocks (eye to centre), holding slot {} {}, falling {} ({} blocks): hit slot {}, spear slot {}, follow-up slot {}",
+            String shield = target instanceof LivingEntity le
+                    ? (le.isBlocking() ? "blocking" : le.isUsingItem() && le.getUseItem().has(DataComponents.BLOCKS_ATTACKS) ? "raised"
+                       : le.getOffhandItem().has(DataComponents.BLOCKS_ATTACKS) || le.getMainHandItem().has(DataComponents.BLOCKS_ATTACKS) ? "held" : "none")
+                      + (shieldUp(le, p) ? ", covers you" : "")
+                    : "none";
+            Duelkit.LOG.info("hit {} at {} blocks (eye to centre), holding slot {} {}, falling {} ({} blocks), shield {}: hit slot {}, spear slot {}, follow-up slot {}",
                     target.getName().getString(), String.format("%.2f", dist), held, Weapons.kind(heldStack), falling(p),
-                    String.format("%.1f", p.fallDistance), swapHit ? hit : -1, spear, follow);
+                    String.format("%.1f", p.fallDistance), shield, swapHit ? hit : -1, spear, follow);
         }
         if (!swapHit && spear < 0 && follow < 0) return;
 
@@ -80,10 +85,10 @@ public final class Swaps {
         if (cfg().axeOnShields && target instanceof LivingEntity le && shieldUp(le, p)) {
             // no axe: a mace into a raised shield is wasted, so it stays a plain hit
             int axe = Weapons.disablesShields(p.getMainHandItem()) ? held : Weapons.find(inv, Weapons::disablesShields);
-            if (axe >= 0 && cfg().stunSlam && smash) follow = mace(inv, true);
+            if (axe >= 0 && cfg().stunSlam && smash) follow = mace(p, inv, target);
             return axe;
         }
-        if (smash) return mace(inv, true);
+        if (smash) return mace(p, inv, target);
         if (cfg().breachOnGround && !falling && (player || cfg().breachOnMobs))
             return Weapons.find(inv, s -> s.is(Items.MACE) && Weapons.has(s, Enchantments.BREACH));
         return -1;
@@ -114,7 +119,10 @@ public final class Swaps {
             hit(gm, p, f, target);
             swapped = true;
         }
-        if (swapped) returnHome(gm, p);
+        if (swapped) {
+            smashed(p);
+            returnHome(gm, p);
+        }
     }
 
     /** Start of every client tick: delayed follow-ups and returns. */
@@ -140,12 +148,18 @@ public final class Swaps {
         }
     }
 
+    /** The server resets your fall distance after a smash; the client does not, so mirror it. */
+    private static void smashed(LocalPlayer p) {
+        if (p.getMainHandItem().is(Items.MACE) && p.fallDistance > 1.5 && !p.isFallFlying()) p.resetFallDistance();
+    }
+
     private static void hit(MultiPlayerGameMode gm, LocalPlayer p, int slot, Entity target) {
         busy = true;
         try {
             p.getInventory().setSelectedSlot(slot);
             gm.attack(p, target);
             Compat.swing(p);
+            smashed(p);
         } finally {
             busy = false;
         }
@@ -173,16 +187,16 @@ public final class Swaps {
         return p.fallDistance > cfg().minFall && !p.isFallFlying();
     }
 
-    /** Density mace when falling, otherwise any mace. */
-    private static int mace(Inventory inv, boolean preferDensity) {
-        int d = preferDensity ? Weapons.find(inv, s -> s.is(Items.MACE) && Weapons.has(s, Enchantments.DENSITY)) : -1;
-        return d >= 0 ? d : Weapons.find(inv, s -> s.is(Items.MACE));
+    /** The mace that deals the most damage to this target right now (Density vs Breach vs plain). */
+    private static int mace(LocalPlayer p, Inventory inv, Entity target) {
+        return MaceMath.best(p, inv, target instanceof LivingEntity le ? le : null);
     }
 
     /** Raised shield that actually covers you: shields block the front 180 degrees around where the head faces. */
     private static boolean shieldUp(LivingEntity t, LocalPlayer p) {
         boolean raised = t.isBlocking() || (t.isUsingItem() && t.getUseItem().has(DataComponents.BLOCKS_ATTACKS));
-        if (!raised) return false;
+        boolean held = t.getMainHandItem().has(DataComponents.BLOCKS_ATTACKS) || t.getOffhandItem().has(DataComponents.BLOCKS_ATTACKS);
+        if (!raised && !(cfg().axeWhenShieldHeld && held)) return false;
         if (!cfg().shieldFacingCheck) return true;
         double yaw = Math.toRadians(t.getYHeadRot());
         double dx = p.getX() - t.getX(), dz = p.getZ() - t.getZ();

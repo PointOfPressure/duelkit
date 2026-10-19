@@ -73,9 +73,11 @@ final class AimAssist {
 
         double turnYaw = 0, turnPitch = 0;
 
+        // tracking fades out as the crosshair drifts off the hitbox, instead of switching off at a hard edge
         if (target == prev && gap < c.trackWithin) {
-            turnYaw += Mth.wrapDegrees(yawTo - lastYawTo) * tracking;
-            turnPitch += (pitchTo - lastPitchTo) * tracking;
+            double t = tracking * (1 - gap / c.trackWithin);
+            turnYaw += Mth.wrapDegrees(yawTo - lastYawTo) * t;
+            turnPitch += (pitchTo - lastPitchTo) * t;
         }
         if (dive && !onTarget && dt > 0) {
             double f = 1 - Math.exp(-c.diveMagnet * dt);
@@ -86,10 +88,11 @@ final class AimAssist {
         double userYaw = Mth.wrapDegrees(p.getYRot() - yawBefore), userPitch = p.getXRot() - pitchBefore;
         double user = Math.hypot(userYaw, userPitch);
         if (user > 1e-4) {
-            if (onTarget) {
-                turnYaw -= userYaw * c.stickiness;
-                turnPitch -= userPitch * c.stickiness;
-            } else if (gapYaw * userYaw + gapPitch * userPitch > 0) {
+            // stickiness ramps in over the last degree, so there is no hard edge to stutter on
+            double stick = c.stickiness * Mth.clamp(1 - gap, 0, 1);
+            turnYaw -= userYaw * stick;
+            turnPitch -= userPitch * stick;
+            if (!onTarget && gapYaw * userYaw + gapPitch * userPitch > 0) {
                 double extra = Math.min(gap, c.pull * user);
                 turnYaw += gapYaw / gap * extra;
                 turnPitch += gapPitch / gap * extra;
@@ -121,7 +124,12 @@ final class AimAssist {
         Vec3 aim = closestPoint(box(e, pt, c.inset), eye, look);
         Vec3 to = aim.subtract(eye);
         double dist = to.length();
-        if (dist > range || dist < 1e-4 || Math.toDegrees(angle(to, look)) > halfCone) return false;
+        if (dist < 1e-4 || Math.toDegrees(angle(to, look)) > halfCone) return false;
+        if (c.rangeShape == Config.RangeShape.COLUMN) {
+            if (Math.hypot(to.x, to.z) > range || (c.verticalRange > 0 && Math.abs(to.y) > c.verticalRange)) return false;
+        } else if (dist > range) {
+            return false;
+        }
         BlockHitResult hit = level.clip(new ClipContext(eye, aim, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p));
         return hit.getType() == HitResult.Type.MISS || hit.getLocation().distanceTo(eye) >= dist - 0.01;
     }

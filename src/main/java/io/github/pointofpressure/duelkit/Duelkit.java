@@ -27,12 +27,33 @@ public final class Duelkit implements ClientModInitializer {
         toggle("fast_throw", UNBOUND, () -> c.fastThrow.enabled = !c.fastThrow.enabled, () -> "Fast throw: " + onOff(c.fastThrow.enabled));
         toggle("wind_jump", InputConstants.KEY_MINUS, () -> c.windJump.enabled = !c.windJump.enabled, () -> "Wind jump: " + onOff(c.windJump.enabled));
         toggle("bucket_clutch", UNBOUND, () -> c.bucketClutch.enabled = !c.bucketClutch.enabled, () -> "Water bucket clutch: " + onOff(c.bucketClutch.enabled));
+        toggle("quick_use", UNBOUND, () -> c.quickUse.enabled = !c.quickUse.enabled, () -> "One-tap throw: " + onOff(c.quickUse.enabled));
+        toggle("pearl_catch", UNBOUND, () -> c.pearlCatch.enabled = !c.pearlCatch.enabled, () -> "Pearl catch: " + onOff(c.pearlCatch.enabled));
         ClientTickEvents.END_CLIENT_TICK.register(BucketClutch::tick);
+        PauseButton.register();
+        Loadouts.load();
+        KeyMapping loadoutKey = Compat.key("key.duelkit.loadouts", InputConstants.KEY_K, KEYS);
+        ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+            while (loadoutKey.consumeClick()) {
+                if (Config.get.loadouts && mc.player != null && !Compat.screenOpen(mc)) Compat.open(mc, new LoadoutScreen(loadoutKey));
+            }
+        });
         ClientTickEvents.START_CLIENT_TICK.register(mc -> {
             Swaps.tick(mc);
             AutoAttack.tick(mc);
             FastThrow.tick(mc);
+            PearlCatch.tick(mc);
+            HoldToEat.tick(mc);
+            QuickUse.tick(mc);
         });
+    }
+
+    public static void afterUseItem() {
+        PearlCatch.afterUseItem(net.minecraft.client.Minecraft.getInstance());
+    }
+
+    public static void onUseItem(net.minecraft.world.entity.player.Player player, net.minecraft.world.item.ItemStack stack) {
+        PearlCatch.onUseItem(player, stack);
     }
 
     /** Every frame, around your own mouse turn. */

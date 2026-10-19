@@ -2,7 +2,11 @@ package io.github.pointofpressure.duelkit;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import java.util.List;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -36,5 +40,18 @@ final class Compat {
     /** Spear range with no minimum distance. */
     static AttackRange reachOf(AttackRange spear) {
         return new AttackRange(0, spear.maxRange(), 0, spear.maxCreativeRange(), spear.hitboxMargin(), spear.mobFactor());
+    }
+
+    static List<AbstractWidget> widgets(Screen screen) {
+        return Screens.getButtons(screen);
+    }
+
+    static void open(Minecraft mc, Screen screen) {
+        mc.setScreen(screen);
+    }
+
+    /** Same as pressing a number key (or F for 40, the off hand) over a slot in the inventory screen. */
+    static void swapClick(net.minecraft.client.multiplayer.MultiPlayerGameMode gm, int container, int slot, int button, LocalPlayer p) {
+        gm.handleInventoryMouseClick(container, slot, button, net.minecraft.world.inventory.ClickType.SWAP, p);
     }
 }

@@ -26,6 +26,8 @@ public final class WindJump {
 
     /** On the render thread, right before the blast's knockback is added. */
     public static void onExplosion(ClientboundExplodePacket packet) {
+        LocalPlayer me = Minecraft.getInstance().player;
+        if (me != null && packet.playerKnockback().isPresent() && packet.playerKnockback().get().y > 0) BucketClutch.launched(me.getY());
         if (!Config.get.windJump.enabled || thrownAt == 0) return;
         if (System.currentTimeMillis() - thrownAt > Config.get.windJump.windowMs) { thrownAt = 0; return; }
         if (packet.playerKnockback().isEmpty() || packet.playerKnockback().get().y <= 0) return;

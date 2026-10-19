@@ -29,5 +29,11 @@ public class MultiPlayerGameModeMixin {
     @Inject(method = "useItem", at = @At("HEAD"))
     private void duelkit$useItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         WindJump.onUseItem(player, player.getItemInHand(hand));
+        io.github.pointofpressure.duelkit.Duelkit.onUseItem(player, player.getItemInHand(hand));
+    }
+
+    @Inject(method = "useItem", at = @At("RETURN"))
+    private void duelkit$afterUseItem(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+        io.github.pointofpressure.duelkit.Duelkit.afterUseItem();
     }
 }

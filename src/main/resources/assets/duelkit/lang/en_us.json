@@ -8,5 +8,8 @@
   "key.duelkit.aim_assist": "Aim assist on / off",
   "key.duelkit.fast_throw": "Fast throw on / off",
   "key.duelkit.wind_jump": "Wind jump on / off",
-  "key.duelkit.bucket_clutch": "Water bucket clutch on / off"
+  "key.duelkit.bucket_clutch": "Water bucket clutch on / off",
+  "key.duelkit.pearl_catch": "Pearl catch on / off",
+  "key.duelkit.quick_use": "One-tap throw on / off",
+  "key.duelkit.loadouts": "Loadouts (hold)"
 }

@@ -3,6 +3,17 @@
   "minVersion": "0.8",
   "package": "io.github.pointofpressure.duelkit.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["ClientPacketListenerMixin", "LocalPlayerMixin", "MinecraftAccess", "MouseHandlerMixin", "MultiPlayerGameModeAccessor", "MultiPlayerGameModeMixin"],
-  "injectors": { "defaultRequire": 1 }
+  "client": [
+    "ClientPacketListenerMixin",
+    "LocalPlayerMixin",
+    "MinecraftAccess",
+    "MouseHandlerMixin",
+    "MultiPlayerGameModeAccessor",
+    "MultiPlayerGameModeMixin",
+    "ScreenEffectRendererMixin",
+    "ToastManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

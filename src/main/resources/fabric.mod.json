@@ -3,13 +3,13 @@
   "id": "duelkit",
   "version": "${version}",
   "name": "Duelkit",
-  "description": "Client-side PvP helpers. Attribute swapping: Breach and Density mace swaps, axe on raised shields with a mace follow-up, and spear reach for your other weapons.",
+  "description": "Client-side PvP helpers. Attribute swapping (Breach and Density mace swaps, axe on raised shields with a mace follow-up, spear reach for your other weapons) and auto attack.",
   "authors": ["PointOfPressure"],
   "contact": { "sources": "https://github.com/PointOfPressure/duelkit", "issues": "https://github.com/PointOfPressure/duelkit/issues" },
   "license": "MIT",
   "environment": "client",
   "entrypoints": { "client": ["io.github.pointofpressure.duelkit.Duelkit"] },
   "mixins": ["duelkit.mixins.json"],
-  "depends": { "fabricloader": ">=0.17.0", "fabric-api": "*", "minecraft": "~1.21.11" },
+  "depends": { "fabricloader": ">=0.17.0", "fabric-api": "*", "minecraft": "~${minecraft}" },
   "conflicts": { "swaphelper": "*" }
 }

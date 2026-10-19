@@ -15,6 +15,22 @@ public final class Config {
     public static Config get = new Config();
 
     public Swaps swaps = new Swaps();
+    public AutoAttack autoAttack = new AutoAttack();
+
+    public static final class AutoAttack {
+        public boolean enabled = true;
+        public boolean players = true;
+        /** Monsters: zombies, skeletons, creepers, endermen, spiders, slimes... */
+        public boolean hostiles = true;
+        /** Everything else alive: animals, villagers, golems. Never armour stands. */
+        public boolean others = false;
+        /** Only while holding a sword, axe, spear, mace or trident. */
+        public boolean weaponsOnly = false;
+        /** Attack at this charge (0-1)... */
+        public double minCharge = 1.0;
+        /** ...counted this many ticks ahead, so the hit lands on the server's first fully charged tick. */
+        public double leadTicks = 0.5;
+    }
 
     public static final class Swaps {
         public boolean enabled = true;

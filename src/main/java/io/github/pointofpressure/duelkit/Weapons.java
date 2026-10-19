@@ -25,6 +25,11 @@ public final class Weapons {
         return "other";
     }
 
+    public static boolean isWeapon(ItemStack s) {
+        String k = kind(s);
+        return !k.equals("empty") && !k.equals("other");
+    }
+
     public static boolean disablesShields(ItemStack s) {
         Weapon w = s.get(DataComponents.WEAPON);
         return w != null && w.disableBlockingForSeconds() > 0;
@@ -53,7 +58,7 @@ public final class Weapons {
         AttackRange best = null;
         for (int i = 0; i < Inventory.getSelectionSize(); i++) {
             AttackRange r = inv.getItem(i).get(DataComponents.ATTACK_RANGE);
-            if (r != null && (best == null || r.maxRange() > best.maxRange())) best = r;
+            if (r != null && (best == null || Compat.maxRange(r) > Compat.maxRange(best))) best = r;
         }
         return best;
     }

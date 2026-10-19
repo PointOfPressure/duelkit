@@ -4,11 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import java.util.function.Supplier;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +17,16 @@ public final class Duelkit implements ClientModInitializer {
     public void onInitializeClient() {
         Config.load();
         Config.Swaps s = Config.get.swaps;
-        toggle("swaps", GLFW.GLFW_KEY_T, () -> s.enabled = !s.enabled, () -> "Swaps: " + onOff(s.enabled));
+        toggle("swaps", InputConstants.KEY_T, () -> s.enabled = !s.enabled, () -> "Swaps: " + onOff(s.enabled));
         toggle("reach", InputConstants.UNKNOWN.getValue(), () -> s.reach = !s.reach, () -> "Spear reach: " + onOff(s.reach));
-        toggle("breach", GLFW.GLFW_KEY_RIGHT_BRACKET, () -> s.breach = !s.breach, () -> "Breach swap: " + onOff(s.breach));
-        toggle("natural", GLFW.GLFW_KEY_0, () -> s.natural = !s.natural, () -> "Swap return: " + (s.natural ? "natural" : "perfect"));
-        ClientTickEvents.START_CLIENT_TICK.register(Swaps::tick);
+        toggle("breach", InputConstants.KEY_RBRACKET, () -> s.breach = !s.breach, () -> "Breach swap: " + onOff(s.breach));
+        toggle("natural", InputConstants.KEY_0, () -> s.natural = !s.natural, () -> "Swap return: " + (s.natural ? "natural" : "perfect"));
+        Config.AutoAttack a = Config.get.autoAttack;
+        toggle("autoattack", InputConstants.KEY_J, () -> a.enabled = !a.enabled, () -> "Auto attack: " + onOff(a.enabled));
+        ClientTickEvents.START_CLIENT_TICK.register(mc -> {
+            Swaps.tick(mc);
+            AutoAttack.tick(mc);
+        });
     }
 
     private static String onOff(boolean b) {
@@ -32,12 +34,12 @@ public final class Duelkit implements ClientModInitializer {
     }
 
     private static void toggle(String name, int key, Runnable flip, Supplier<String> message) {
-        KeyMapping k = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.duelkit." + name, InputConstants.Type.KEYSYM, key, KEYS));
+        KeyMapping k = Compat.key("key.duelkit." + name, key, KEYS);
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             while (k.consumeClick()) {
                 flip.run();
                 Config.save();
-                if (mc.player != null) mc.player.displayClientMessage(Component.literal(message.get()), true);
+                if (mc.player != null) Compat.actionBar(mc.player, message.get());
             }
         });
     }

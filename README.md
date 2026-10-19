@@ -1,6 +1,6 @@
 # Duelkit
 
-Client-side PvP helpers for Fabric 1.21.11. Nothing that can't already be done by hand with a fast hotbar; it just does it in the same tick, every time.
+Client-side PvP helpers for Fabric 1.21.11 and 26.3. Nothing that can't already be done by hand with a fast hotbar; it just does it in the same tick, every time.
 
 ## Attribute swapping
 
@@ -18,6 +18,12 @@ Spear reach and the mace swaps stack: hold a sword, target from spear range, lan
 
 Swaps only start while holding an item listed in `from` (default: sword, axe). Mobs only get the smash swap unless `breachMobs` is on.
 
+## Auto attack
+
+Attacks whatever is under your crosshair as soon as your weapon is charged, through the normal attack path, so every swap above still applies. Counts the charge half a tick ahead (`leadTicks`) so the hit arrives on the server's first fully charged tick.
+
+Targets players and hostile mobs by default. Never armour stands, item frames or other non-living entities.
+
 ## Keys
 
 All rebindable under Controls → Duelkit.
@@ -27,11 +33,14 @@ All rebindable under Controls → Duelkit.
 | `T` | swaps on / off |
 | `]` | Breach swap |
 | `0` | perfect / natural return |
+| `J` | auto attack |
 | unbound | spear reach |
 
 ## Config
 
-`config/duelkit.json`, written on first launch. Swap settings live under `"swaps"`.
+`config/duelkit.json`, written on first launch.
+
+### `swaps`
 
 | Key | Default | |
 |---|---|---|
@@ -48,9 +57,21 @@ All rebindable under Controls → Duelkit.
 | `shieldBreak` | `true` | |
 | `stunSlam` | `true` | |
 
+### `autoAttack`
+
+| Key | Default | |
+|---|---|---|
+| `enabled` | `true` | |
+| `players` | `true` | |
+| `hostiles` | `true` | monsters: zombies, skeletons, creepers, endermen, spiders, slimes… |
+| `others` | `false` | animals, villagers, golems |
+| `weaponsOnly` | `false` | only while holding a sword, axe, spear, mace or trident |
+| `minCharge` | `1.0` | 0–1 |
+| `leadTicks` | `0.5` | |
+
 ## Servers
 
-Same-tick swaps depend on the server applying attributes once per tick. Vanilla 1.21.11 does. Paper only does with `update-equipment-on-player-actions: false`. Anticheats and server rules vary; check before using it somewhere that isn't yours.
+Same-tick swaps depend on the server applying attributes once per tick. Vanilla 1.21.11 and 26.3 do. Paper only does with `update-equipment-on-player-actions: false`. Anticheats and server rules vary; check before using it somewhere that isn't yours.
 
 ## Build
 
@@ -58,7 +79,7 @@ Same-tick swaps depend on the server applying attributes once per tick. Vanilla 
 ./gradlew build
 ```
 
-Jar in `build/libs/`. Requires Fabric API.
+One source tree in `src/`, one Gradle project per Minecraft version in `versions/<version>/`, each with a small `Compat` class for the calls that differ. Jars land in `versions/<version>/build/libs/`. Requires Fabric API.
 
 ## License
 

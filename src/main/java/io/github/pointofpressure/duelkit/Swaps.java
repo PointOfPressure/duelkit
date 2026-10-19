@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -123,7 +122,7 @@ public final class Swaps {
         try {
             p.getInventory().setSelectedSlot(slot);
             gm.attack(p, target);
-            p.swing(InteractionHand.MAIN_HAND);
+            Compat.swing(p);
         } finally {
             busy = false;
         }
@@ -171,6 +170,6 @@ public final class Swaps {
         if (!cfg().enabled || !cfg().reach || !cfg().from.contains(Weapons.kind(held))) return null;
         AttackRange s = Weapons.bestRange(p.getInventory());
         if (s == null) return null;
-        return new AttackRange(0, s.maxRange(), 0, s.maxCreativeRange(), s.hitboxMargin(), s.mobFactor());
+        return Compat.reachOf(s);
     }
 }

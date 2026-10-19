@@ -8,8 +8,9 @@
   "contact": { "sources": "https://github.com/PointOfPressure/duelkit", "issues": "https://github.com/PointOfPressure/duelkit/issues" },
   "license": "MIT",
   "environment": "client",
-  "entrypoints": { "client": ["io.github.pointofpressure.duelkit.Duelkit"] },
+  "entrypoints": { "client": ["io.github.pointofpressure.duelkit.Duelkit"], "modmenu": ["io.github.pointofpressure.duelkit.ModMenu"] },
   "mixins": ["duelkit.mixins.json"],
   "depends": { "fabricloader": ">=0.17.0", "fabric-api": "*", "minecraft": "~${minecraft}" },
+  "suggests": { "modmenu": "*", "yet_another_config_lib_v3": "*" },
   "conflicts": { "swaphelper": "*" }
 }

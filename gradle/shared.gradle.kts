@@ -12,3 +12,8 @@ tasks.named<ProcessResources>("processResources") {
     inputs.properties(props)
     filesMatching("fabric.mod.json") { expand(props) }
 }
+
+repositories {
+    maven("https://maven.isxander.dev/releases")
+    maven("https://maven.terraformersmc.com/releases")
+}

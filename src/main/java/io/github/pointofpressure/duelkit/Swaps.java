@@ -37,7 +37,7 @@ public final class Swaps {
         return Config.get.swaps;
     }
 
-    public static void before(Player attacker, Entity target) {
+    public static void before(MultiPlayerGameMode gm, Player attacker, Entity target) {
         swapped = false;
         follow = -1;
         Minecraft mc = Minecraft.getInstance();
@@ -45,34 +45,51 @@ public final class Swaps {
         LocalPlayer p = mc.player;
         Inventory inv = p.getInventory();
         int held = inv.getSelectedSlot();
-        if (!cfg().from.contains(Weapons.kind(p.getMainHandItem()))) return;
+        ItemStack heldStack = p.getMainHandItem();
+        if (!cfg().from.contains(Weapons.kind(heldStack))) return;
 
-        boolean falling = falling(p);
-        boolean player = target instanceof Player;
-        boolean smash = cfg().smash && falling && (player || cfg().smashMobs);
-        int hit;
-        if (cfg().shieldBreak && target instanceof LivingEntity le && shieldUp(le, p)) {
-            hit = Weapons.disablesShields(p.getMainHandItem()) ? held : Weapons.find(inv, Weapons::disablesShields);
-            // no axe: a mace into a raised shield is wasted, so leave the hit alone
-            if (hit < 0) return;
-            if (cfg().stunSlam && smash) follow = mace(inv, true);
-        } else if (smash) {
-            hit = mace(inv, true);
-        } else if (cfg().breach && !falling && (player || cfg().breachMobs)) {
-            hit = Weapons.find(inv, s -> s.is(Items.MACE) && Weapons.has(s, Enchantments.BREACH));
-        } else {
-            return;
-        }
+        int hit = hitSlot(p, inv, held, target);
         if (follow == held) follow = -1;
-        if (hit < 0 || hit == held) {
-            if (follow >= 0 && returnIn < 0) origin = held;
-            return;
-        }
+        int spear = spearSlot(p, inv, held, heldStack, target);
+        boolean swapHit = hit >= 0 && hit != held;
+        if (!swapHit && spear < 0 && follow < 0) return;
+
         // a delayed return still pending keeps the original slot
         if (returnIn < 0) origin = held;
         returnIn = -1;
-        inv.setSelectedSlot(hit);
-        swapped = true;
+        if (spear >= 0) {
+            inv.setSelectedSlot(spear);
+            ((MultiPlayerGameModeAccessor) gm).duelkit$ensureHasSentCarriedItem();
+        }
+        // attack() sends this slot itself, right before the attack packet
+        inv.setSelectedSlot(swapHit ? hit : held);
+        swapped = swapHit || spear >= 0;
+    }
+
+    /** Slot to land the hit with, or -1 for the held weapon. May set {@link #follow}. */
+    private static int hitSlot(LocalPlayer p, Inventory inv, int held, Entity target) {
+        boolean falling = falling(p);
+        boolean player = target instanceof Player;
+        boolean smash = cfg().smash && falling && (player || cfg().smashMobs);
+        if (cfg().shieldBreak && target instanceof LivingEntity le && shieldUp(le, p)) {
+            // no axe: a mace into a raised shield is wasted, so it stays a plain hit
+            int axe = Weapons.disablesShields(p.getMainHandItem()) ? held : Weapons.find(inv, Weapons::disablesShields);
+            if (axe >= 0 && cfg().stunSlam && smash) follow = mace(inv, true);
+            return axe;
+        }
+        if (smash) return mace(inv, true);
+        if (cfg().breach && !falling && (player || cfg().breachMobs))
+            return Weapons.find(inv, s -> s.is(Items.MACE) && Weapons.has(s, Enchantments.BREACH));
+        return -1;
+    }
+
+    /** Spear slot to pass through before the hit, as in a manual reach swap, or -1. */
+    private static int spearSlot(LocalPlayer p, Inventory inv, int held, ItemStack heldStack, Entity target) {
+        if (cfg().reach == Config.Reach.OFF || heldStack.has(DataComponents.ATTACK_RANGE)) return -1;
+        int slot = Weapons.bestRangeSlot(inv);
+        if (slot < 0 || slot == held) return -1;
+        if (cfg().reach == Config.Reach.ALWAYS) return slot;
+        return AttackRange.defaultFor(p).isInRange(p, target.getBoundingBox(), 0) ? -1 : slot;
     }
 
     public static void after(MultiPlayerGameMode gm, Player attacker, Entity target) {
@@ -135,7 +152,7 @@ public final class Swaps {
             returnFrom = p.getInventory().getSelectedSlot();
             return;
         }
-        p.getInventory().setSelectedSlot(origin);
+        if (p.getInventory().getSelectedSlot() != origin) p.getInventory().setSelectedSlot(origin);
         // send it now so the server never ticks with the swapped item in hand
         ((MultiPlayerGameModeAccessor) gm).duelkit$ensureHasSentCarriedItem();
         origin = -1;
@@ -167,9 +184,8 @@ public final class Swaps {
 
     /** Spear reach for the held weapon: the hotbar spear's range with no minimum. Null when it does not apply. */
     public static AttackRange reach(LocalPlayer p, ItemStack held) {
-        if (!cfg().enabled || !cfg().reach || !cfg().from.contains(Weapons.kind(held))) return null;
-        AttackRange s = Weapons.bestRange(p.getInventory());
-        if (s == null) return null;
-        return Compat.reachOf(s);
+        if (!cfg().enabled || cfg().reach == Config.Reach.OFF || !cfg().from.contains(Weapons.kind(held))) return null;
+        int slot = Weapons.bestRangeSlot(p.getInventory());
+        return slot < 0 ? null : Compat.reachOf(p.getInventory().getItem(slot).get(DataComponents.ATTACK_RANGE));
     }
 }

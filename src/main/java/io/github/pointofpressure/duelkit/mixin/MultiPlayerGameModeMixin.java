@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MultiPlayerGameModeMixin {
     @Inject(method = "attack", at = @At("HEAD"))
     private void duelkit$before(Player attacker, Entity target, CallbackInfo ci) {
-        Swaps.before(attacker, target);
+        Swaps.before((MultiPlayerGameMode) (Object) this, attacker, target);
     }
 
     @Inject(method = "attack", at = @At("TAIL"))

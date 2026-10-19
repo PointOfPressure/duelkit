@@ -41,21 +41,30 @@ public final class Config {
         public int naturalMinTicks = 2;
         public int naturalMaxTicks = 4;
 
-        /** Your other weapons target at the range of the best spear in your hotbar. */
-        public boolean reach = true;
+        /** Spear reach: target from the range of a hotbar spear, passing through the spear slot before the hit. */
+        public Reach reach = Reach.WHEN_NEEDED;
 
         /** Falling at least maceMinFall blocks: hit with the mace (Density preferred). */
         public boolean smash = true;
         public double maceMinFall = 1.5;
         public boolean smashMobs = true;
-        /** Not falling: hit players with a Breach mace. */
-        public boolean breach = true;
+        /** On the ground: hit players with a Breach mace instead of your weapon. */
+        public boolean breach = false;
         public boolean breachMobs = false;
 
         /** Raised shield facing you: hit with an axe. */
         public boolean shieldBreak = true;
         /** ...then, if falling, the mace in the same tick (stun slam). */
         public boolean stunSlam = true;
+    }
+
+    public enum Reach {
+        /** Normal reach. */
+        OFF,
+        /** Spear range for targeting; the spear swap only happens when the target is past normal reach. */
+        WHEN_NEEDED,
+        /** Every hit goes through the spear slot. */
+        ALWAYS
     }
 
     public static void load() {

@@ -18,7 +18,9 @@ public final class Duelkit implements ClientModInitializer {
         Config.load();
         Config.Swaps s = Config.get.swaps;
         toggle("swaps", InputConstants.KEY_T, () -> s.enabled = !s.enabled, () -> "Swaps: " + onOff(s.enabled));
-        toggle("reach", InputConstants.UNKNOWN.getValue(), () -> s.reach = !s.reach, () -> "Spear reach: " + onOff(s.reach));
+        toggle("reach", InputConstants.UNKNOWN.getValue(),
+                () -> s.reach = Config.Reach.values()[(s.reach.ordinal() + 1) % Config.Reach.values().length],
+                () -> "Spear reach: " + reachName(s.reach));
         toggle("breach", InputConstants.KEY_RBRACKET, () -> s.breach = !s.breach, () -> "Breach swap: " + onOff(s.breach));
         toggle("natural", InputConstants.KEY_0, () -> s.natural = !s.natural, () -> "Swap return: " + (s.natural ? "natural" : "perfect"));
         Config.AutoAttack a = Config.get.autoAttack;
@@ -27,6 +29,14 @@ public final class Duelkit implements ClientModInitializer {
             Swaps.tick(mc);
             AutoAttack.tick(mc);
         });
+    }
+
+    static String reachName(Config.Reach r) {
+        return switch (r) {
+            case OFF -> "off";
+            case WHEN_NEEDED -> "when needed";
+            case ALWAYS -> "always";
+        };
     }
 
     private static String onOff(boolean b) {

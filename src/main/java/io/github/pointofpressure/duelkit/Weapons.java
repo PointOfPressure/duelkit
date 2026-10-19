@@ -53,12 +53,16 @@ public final class Weapons {
         return -1;
     }
 
-    /** The longest attack range in the hotbar (spears), or null. */
-    public static AttackRange bestRange(Inventory inv) {
-        AttackRange best = null;
+    /** Hotbar slot with the longest attack range (spears), or -1. */
+    public static int bestRangeSlot(Inventory inv) {
+        int best = -1;
+        float max = 0;
         for (int i = 0; i < Inventory.getSelectionSize(); i++) {
             AttackRange r = inv.getItem(i).get(DataComponents.ATTACK_RANGE);
-            if (r != null && (best == null || Compat.maxRange(r) > Compat.maxRange(best))) best = r;
+            if (r != null && usable(inv.getItem(i)) && Compat.maxRange(r) > max) {
+                max = Compat.maxRange(r);
+                best = i;
+            }
         }
         return best;
     }

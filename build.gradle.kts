@@ -5,6 +5,6 @@ plugins {
 }
 
 subprojects {
-    version = "0.3.0+${name}"
+    version = "0.4.0+${name}"
     group = "io.github.pointofpressure.duelkit"
 }

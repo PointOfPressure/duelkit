@@ -16,55 +16,124 @@ public final class Config {
 
     public Swaps swaps = new Swaps();
     public AutoAttack autoAttack = new AutoAttack();
+    public AimAssist aimAssist = new AimAssist();
+    public FastThrow fastThrow = new FastThrow();
+    public WindJump windJump = new WindJump();
+    public BucketClutch bucketClutch = new BucketClutch();
+
+    public static final class Swaps {
+        public boolean enabled = true;
+        /** Held items swaps start from: sword, axe, spear, mace, trident, empty. */
+        public List<String> holding = new ArrayList<>(List.of("sword", "axe"));
+        public SpearReach spearReach = SpearReach.WHEN_NEEDED;
+        /** Falling at least minFall blocks: hit with the mace (Density preferred). */
+        public boolean maceWhenFalling = true;
+        public double minFall = 1.5;
+        public boolean maceOnMobs = true;
+        /** On the ground: hit players with a Breach mace. */
+        public boolean breachOnGround = false;
+        public boolean breachOnMobs = false;
+        /** Raised shield facing you: hit with an axe. */
+        public boolean axeOnShields = true;
+        /** ...then, if falling, the mace in the same tick. */
+        public boolean stunSlam = true;
+        public SwapBack swapBack = SwapBack.SAME_TICK;
+        public int delayMin = 2;
+        public int delayMax = 4;
+        // advanced
+        /** Axe only when the raised shield actually faces you (shields block the front 180 degrees). */
+        public boolean shieldFacingCheck = true;
+        /** Write what each hit did to logs/latest.log. */
+        public boolean debugLog = false;
+    }
 
     public static final class AutoAttack {
         public boolean enabled = true;
         public boolean players = true;
-        /** Monsters: zombies, skeletons, creepers, endermen, spiders, slimes... */
         public boolean hostiles = true;
-        /** Everything else alive: animals, villagers, golems. Never armour stands. */
+        /** Animals, villagers, golems. Never armour stands. */
         public boolean others = false;
-        /** Only while holding a sword, axe, spear, mace or trident. */
         public boolean weaponsOnly = false;
-        /** Attack at this charge (0-1)... */
-        public double minCharge = 1.0;
-        /** ...counted this many ticks ahead, so the hit lands on the server's first fully charged tick. */
+        /** Attack charge to wait for, 0-1... */
+        public double charge = 1.0;
+        /** ...counted this many ticks ahead, so the hit lands on the server's first charged tick. */
         public double leadTicks = 0.5;
+        // advanced
+        /** Keep attacking while eating, drinking or blocking. */
+        public boolean whileUsingItem = false;
+        /** Only while the attack key is held. */
+        public boolean onlyWhileAttackHeld = false;
     }
 
-    public static final class Swaps {
+    public static final class AimAssist {
         public boolean enabled = true;
-        /** Held items that swaps start from: sword, axe, spear, mace, trident, empty. */
-        public List<String> from = new ArrayList<>(List.of("sword", "axe"));
-        /** Natural: the swapped weapon stays in hand for a few ticks instead of going back the same tick. */
-        public boolean natural = false;
-        public int naturalMinTicks = 2;
-        public int naturalMaxTicks = 4;
+        public boolean players = true;
+        public boolean hostiles = true;
+        /** Cone width in degrees. */
+        public double cone = 40;
+        public double range = 6.0;
+        /** Extra turn toward the target, as a share of your own mouse movement toward it. */
+        public double pull = 0.5;
+        /** How much your own turning is slowed while the crosshair is on the target. */
+        public double stickiness = 0.35;
+        /** Share of the target's movement across your screen that is followed while you are on it. */
+        public double tracking = 0.6;
 
-        /** Spear reach: target from the range of a hotbar spear, passing through the spear slot before the hit. */
-        public Reach reach = Reach.WHEN_NEEDED;
+        /** Mace dive: falling onto a target, the hardest aim in the game. Stronger, wider, and it pulls on its own. */
+        public boolean dive = true;
+        public double diveMinFall = 3.0;
+        public double diveCone = 90;
+        public double diveRange = 12.0;
+        public double diveTracking = 1.0;
+        /** Pulls toward the target even with your hand still. Fraction of the gap closed per second is 1 - e^-magnet. */
+        public double diveMagnet = 8.0;
 
-        /** Falling at least maceMinFall blocks: hit with the mace (Density preferred). */
-        public boolean smash = true;
-        public double maceMinFall = 1.5;
-        public boolean smashMobs = true;
-        /** On the ground: hit players with a Breach mace instead of your weapon. */
-        public boolean breach = false;
-        public boolean breachMobs = false;
-
-        /** Raised shield facing you: hit with an axe. */
-        public boolean shieldBreak = true;
-        /** ...then, if falling, the mace in the same tick (stun slam). */
-        public boolean stunSlam = true;
+        // advanced
+        /** Aim this far inside the hitbox edge, in blocks. */
+        public double inset = 0.15;
+        /** Tracking only applies while the crosshair is within this many degrees of the hitbox. */
+        public double trackWithin = 3.0;
+        /** A held target is kept until it is this many times further off-crosshair than a new one may be. */
+        public double keepTarget = 1.5;
     }
 
-    public enum Reach {
-        /** Normal reach. */
-        OFF,
-        /** Spear range for targeting; the spear swap only happens when the target is past normal reach. */
-        WHEN_NEEDED,
-        /** Every hit goes through the spear slot. */
-        ALWAYS
+    public static final class FastThrow {
+        public boolean enabled = true;
+        public boolean enderPearls = true;
+        public boolean windCharges = true;
+        public boolean xpBottles = true;
+        public boolean snowballsAndEggs = false;
+        public boolean splashPotions = false;
+        // advanced
+        /** Use the off hand when the main hand is empty or a weapon. */
+        public boolean offHand = true;
+    }
+
+    public static final class WindJump {
+        public boolean enabled = true;
+        /** Degrees below the horizon you must be looking for a throw to count. */
+        public double minPitch = 60;
+        // advanced
+        /** How long after the throw the blast still counts, in milliseconds. */
+        public int windowMs = 1500;
+    }
+
+    public static final class BucketClutch {
+        public boolean enabled = true;
+        /** Only for falls longer than this many blocks. */
+        public double minFall = 3.0;
+    }
+
+    public enum SpearReach {
+        OFF("Off"), WHEN_NEEDED("When out of reach"), ALWAYS("Every hit");
+        public final String label;
+        SpearReach(String label) { this.label = label; }
+    }
+
+    public enum SwapBack {
+        SAME_TICK("Same tick"), DELAYED("After a delay");
+        public final String label;
+        SwapBack(String label) { this.label = label; }
     }
 
     public static void load() {
@@ -73,7 +142,6 @@ public final class Config {
         } catch (Exception e) {
             Duelkit.LOG.warn("config/duelkit.json unreadable, using defaults: {}", e.toString());
             get = new Config();
-            return;
         }
         if (get == null) get = new Config();
         save();

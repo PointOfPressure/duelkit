@@ -46,12 +46,18 @@ public final class Swaps {
         Inventory inv = p.getInventory();
         int held = inv.getSelectedSlot();
         ItemStack heldStack = p.getMainHandItem();
-        if (!cfg().from.contains(Weapons.kind(heldStack))) return;
+        if (!cfg().holding.contains(Weapons.kind(heldStack))) return;
 
         int hit = hitSlot(p, inv, held, target);
         if (follow == held) follow = -1;
         int spear = spearSlot(p, inv, held, heldStack, target);
         boolean swapHit = hit >= 0 && hit != held;
+        if (cfg().debugLog) {
+            double dist = p.getEyePosition().distanceTo(target.getBoundingBox().getCenter());
+            Duelkit.LOG.info("hit {} at {} blocks (eye to centre), holding slot {} {}, falling {} ({} blocks): hit slot {}, spear slot {}, follow-up slot {}",
+                    target.getName().getString(), String.format("%.2f", dist), held, Weapons.kind(heldStack), falling(p),
+                    String.format("%.1f", p.fallDistance), swapHit ? hit : -1, spear, follow);
+        }
         if (!swapHit && spear < 0 && follow < 0) return;
 
         // a delayed return still pending keeps the original slot
@@ -70,25 +76,25 @@ public final class Swaps {
     private static int hitSlot(LocalPlayer p, Inventory inv, int held, Entity target) {
         boolean falling = falling(p);
         boolean player = target instanceof Player;
-        boolean smash = cfg().smash && falling && (player || cfg().smashMobs);
-        if (cfg().shieldBreak && target instanceof LivingEntity le && shieldUp(le, p)) {
+        boolean smash = cfg().maceWhenFalling && falling && (player || cfg().maceOnMobs);
+        if (cfg().axeOnShields && target instanceof LivingEntity le && shieldUp(le, p)) {
             // no axe: a mace into a raised shield is wasted, so it stays a plain hit
             int axe = Weapons.disablesShields(p.getMainHandItem()) ? held : Weapons.find(inv, Weapons::disablesShields);
             if (axe >= 0 && cfg().stunSlam && smash) follow = mace(inv, true);
             return axe;
         }
         if (smash) return mace(inv, true);
-        if (cfg().breach && !falling && (player || cfg().breachMobs))
+        if (cfg().breachOnGround && !falling && (player || cfg().breachOnMobs))
             return Weapons.find(inv, s -> s.is(Items.MACE) && Weapons.has(s, Enchantments.BREACH));
         return -1;
     }
 
     /** Spear slot to pass through before the hit, as in a manual reach swap, or -1. */
     private static int spearSlot(LocalPlayer p, Inventory inv, int held, ItemStack heldStack, Entity target) {
-        if (cfg().reach == Config.Reach.OFF || heldStack.has(DataComponents.ATTACK_RANGE)) return -1;
+        if (cfg().spearReach == Config.SpearReach.OFF || heldStack.has(DataComponents.ATTACK_RANGE)) return -1;
         int slot = Weapons.bestRangeSlot(inv);
         if (slot < 0 || slot == held) return -1;
-        if (cfg().reach == Config.Reach.ALWAYS) return slot;
+        if (cfg().spearReach == Config.SpearReach.ALWAYS) return slot;
         return AttackRange.defaultFor(p).isInRange(p, target.getBoundingBox(), 0) ? -1 : slot;
     }
 
@@ -99,7 +105,7 @@ public final class Swaps {
         int f = follow;
         follow = -1;
         if (f >= 0) {
-            if (cfg().natural) {
+            if (cfg().swapBack == Config.SwapBack.DELAYED) {
                 followSlot = f;
                 followTarget = target;
                 followIn = naturalTicks();
@@ -147,7 +153,7 @@ public final class Swaps {
 
     private static void returnHome(MultiPlayerGameMode gm, LocalPlayer p) {
         if (origin < 0) return;
-        if (cfg().natural) {
+        if (cfg().swapBack == Config.SwapBack.DELAYED) {
             returnIn = naturalTicks();
             returnFrom = p.getInventory().getSelectedSlot();
             return;
@@ -159,12 +165,12 @@ public final class Swaps {
     }
 
     private static int naturalTicks() {
-        int lo = Math.max(1, cfg().naturalMinTicks), hi = Math.max(lo, cfg().naturalMaxTicks);
+        int lo = Math.max(1, cfg().delayMin), hi = Math.max(lo, cfg().delayMax);
         return ThreadLocalRandom.current().nextInt(lo, hi + 1);
     }
 
-    static boolean falling(LocalPlayer p) {
-        return p.fallDistance > cfg().maceMinFall && !p.isFallFlying();
+    public static boolean falling(LocalPlayer p) {
+        return p.fallDistance > cfg().minFall && !p.isFallFlying();
     }
 
     /** Density mace when falling, otherwise any mace. */
@@ -177,6 +183,7 @@ public final class Swaps {
     private static boolean shieldUp(LivingEntity t, LocalPlayer p) {
         boolean raised = t.isBlocking() || (t.isUsingItem() && t.getUseItem().has(DataComponents.BLOCKS_ATTACKS));
         if (!raised) return false;
+        if (!cfg().shieldFacingCheck) return true;
         double yaw = Math.toRadians(t.getYHeadRot());
         double dx = p.getX() - t.getX(), dz = p.getZ() - t.getZ();
         return dx * -Math.sin(yaw) + dz * Math.cos(yaw) >= 0;
@@ -184,7 +191,7 @@ public final class Swaps {
 
     /** Spear reach for the held weapon: the hotbar spear's range with no minimum. Null when it does not apply. */
     public static AttackRange reach(LocalPlayer p, ItemStack held) {
-        if (!cfg().enabled || cfg().reach == Config.Reach.OFF || !cfg().from.contains(Weapons.kind(held))) return null;
+        if (!cfg().enabled || cfg().spearReach == Config.SpearReach.OFF || !cfg().holding.contains(Weapons.kind(held))) return null;
         int slot = Weapons.bestRangeSlot(p.getInventory());
         return slot < 0 ? null : Compat.reachOf(p.getInventory().getItem(slot).get(DataComponents.ATTACK_RANGE));
     }

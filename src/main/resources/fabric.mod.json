@@ -3,7 +3,7 @@
   "id": "duelkit",
   "version": "${version}",
   "name": "Duelkit",
-  "description": "Client-side PvP helpers. Attribute swapping (Breach and Density mace swaps, axe on raised shields with a mace follow-up, spear reach for your other weapons) and auto attack.",
+  "description": "Client-side PvP helpers: same-tick attribute swaps (mace, axe, spear reach), auto attack, aim assist, fast throw, wind jump and water bucket clutch.",
   "authors": ["PointOfPressure"],
   "contact": { "sources": "https://github.com/PointOfPressure/duelkit", "issues": "https://github.com/PointOfPressure/duelkit/issues" },
   "license": "MIT",

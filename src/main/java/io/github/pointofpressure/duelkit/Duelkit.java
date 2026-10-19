@@ -12,31 +12,41 @@ import org.slf4j.LoggerFactory;
 public final class Duelkit implements ClientModInitializer {
     public static final Logger LOG = LoggerFactory.getLogger("duelkit");
     private static final KeyMapping.Category KEYS = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("duelkit", "keys"));
+    private static final int UNBOUND = InputConstants.UNKNOWN.getValue();
 
     @Override
     public void onInitializeClient() {
         Config.load();
-        Config.Swaps s = Config.get.swaps;
-        toggle("swaps", InputConstants.KEY_T, () -> s.enabled = !s.enabled, () -> "Swaps: " + onOff(s.enabled));
-        toggle("reach", InputConstants.UNKNOWN.getValue(),
-                () -> s.reach = Config.Reach.values()[(s.reach.ordinal() + 1) % Config.Reach.values().length],
-                () -> "Spear reach: " + reachName(s.reach));
-        toggle("breach", InputConstants.KEY_RBRACKET, () -> s.breach = !s.breach, () -> "Breach swap: " + onOff(s.breach));
-        toggle("natural", InputConstants.KEY_0, () -> s.natural = !s.natural, () -> "Swap return: " + (s.natural ? "natural" : "perfect"));
-        Config.AutoAttack a = Config.get.autoAttack;
-        toggle("autoattack", InputConstants.KEY_J, () -> a.enabled = !a.enabled, () -> "Auto attack: " + onOff(a.enabled));
+        Config c = Config.get;
+        toggle("swaps", InputConstants.KEY_T, () -> c.swaps.enabled = !c.swaps.enabled, () -> "Swaps: " + onOff(c.swaps.enabled));
+        toggle("spear_reach", UNBOUND, () -> c.swaps.spearReach = next(c.swaps.spearReach), () -> "Spear reach: " + c.swaps.spearReach.label);
+        toggle("breach", InputConstants.KEY_RBRACKET, () -> c.swaps.breachOnGround = !c.swaps.breachOnGround, () -> "Breach on the ground: " + onOff(c.swaps.breachOnGround));
+        toggle("swap_back", InputConstants.KEY_0, () -> c.swaps.swapBack = next(c.swaps.swapBack), () -> "Swap back: " + c.swaps.swapBack.label);
+        toggle("auto_attack", InputConstants.KEY_J, () -> c.autoAttack.enabled = !c.autoAttack.enabled, () -> "Auto attack: " + onOff(c.autoAttack.enabled));
+        toggle("aim_assist", InputConstants.KEY_LBRACKET, () -> c.aimAssist.enabled = !c.aimAssist.enabled, () -> "Aim assist: " + onOff(c.aimAssist.enabled));
+        toggle("fast_throw", UNBOUND, () -> c.fastThrow.enabled = !c.fastThrow.enabled, () -> "Fast throw: " + onOff(c.fastThrow.enabled));
+        toggle("wind_jump", InputConstants.KEY_MINUS, () -> c.windJump.enabled = !c.windJump.enabled, () -> "Wind jump: " + onOff(c.windJump.enabled));
+        toggle("bucket_clutch", UNBOUND, () -> c.bucketClutch.enabled = !c.bucketClutch.enabled, () -> "Water bucket clutch: " + onOff(c.bucketClutch.enabled));
+        ClientTickEvents.END_CLIENT_TICK.register(BucketClutch::tick);
         ClientTickEvents.START_CLIENT_TICK.register(mc -> {
             Swaps.tick(mc);
             AutoAttack.tick(mc);
+            FastThrow.tick(mc);
         });
     }
 
-    static String reachName(Config.Reach r) {
-        return switch (r) {
-            case OFF -> "off";
-            case WHEN_NEEDED -> "when needed";
-            case ALWAYS -> "always";
-        };
+    /** Every frame, around your own mouse turn. */
+    public static void beforeMouse() {
+        AimAssist.beforeMouse();
+    }
+
+    public static void afterMouse() {
+        AimAssist.afterMouse();
+    }
+
+    private static <E extends Enum<E>> E next(E e) {
+        E[] all = e.getDeclaringClass().getEnumConstants();
+        return all[(e.ordinal() + 1) % all.length];
     }
 
     private static String onOff(boolean b) {

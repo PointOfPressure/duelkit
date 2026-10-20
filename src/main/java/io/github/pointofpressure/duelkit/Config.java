@@ -151,8 +151,14 @@ public final class Config {
 
     public static final class PearlCatch {
         public boolean enabled = true;
-        /** Ticks between the pearl and the wind charge; 0 = same tick, straight after. */
-        public int delayTicks = 0;
+        /** Only when looking at least this many degrees above the horizon. */
+        public double minLookUp = 45;
+        /** Auto: simulate both throws and pick the delay that sends the pearl highest. */
+        public boolean auto = true;
+        /** Auto only: longest delay it considers, in ticks. */
+        public int maxDelay = 10;
+        /** Fixed delay when auto is off; 0 = same tick. */
+        public int delayTicks = 2;
         /** Throw the wind charge straight down instead of after the pearl. */
         public boolean atFeet = false;
     }
@@ -167,6 +173,8 @@ public final class Config {
         public boolean enabled = true;
         public boolean windCharges = true;
         public boolean enderPearls = true;
+        /** A spear with Lunge: its key dashes you instead of selecting it. */
+        public boolean lungeSpears = true;
     }
 
     public enum SpearReach {

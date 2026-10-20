@@ -56,4 +56,10 @@ final class Compat {
     static void swapClick(net.minecraft.client.multiplayer.MultiPlayerGameMode gm, int container, int slot, int button, LocalPlayer p) {
         gm.handleContainerInput(container, slot, button, net.minecraft.world.inventory.ContainerInput.SWAP, p);
     }
+
+    /** Whether the key is physically held right now (KeyMapping.isDown can go stale around screens). */
+    static boolean keyHeld(Minecraft mc, KeyMapping key) {
+        InputConstants.Key k = KeyMappingHelper.getBoundKeyOf(key);
+        return k.getType() == InputConstants.Type.KEYBOARD ? InputConstants.isKeyDown(k.getValue()) : key.isDown();
+    }
 }

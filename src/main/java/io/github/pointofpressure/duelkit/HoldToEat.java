@@ -18,24 +18,29 @@ final class HoldToEat {
     static void tick(Minecraft mc) {
         Config.HoldToEat c = Config.get.holdToEat;
         LocalPlayer p = mc.player;
-        if (p == null || mc.gameMode == null) return;
+        if (p == null || mc.gameMode == null) {
+            eatingSlot = previous = -1;
+            return;
+        }
         KeyMapping[] keys = mc.options.keyHotbarSlots;
         Inventory inv = p.getInventory();
         if (eatingSlot >= 0) {
-            if (keys[eatingSlot].isDown() && !Compat.screenOpen(mc) && wanted(c, inv.getItem(eatingSlot))) {
-                while (keys[eatingSlot].consumeClick()) { }
+            while (keys[eatingSlot].consumeClick()) { }
+            if (Compat.keyHeld(mc, keys[eatingSlot]) && !Compat.screenOpen(mc) && wanted(c, inv.getItem(eatingSlot))) {
+                if (inv.getSelectedSlot() != eatingSlot) inv.setSelectedSlot(eatingSlot);
                 mc.options.keyUse.setDown(true);
                 return;
             }
+            // let go (or ran out): stop eating and always go back
             mc.options.keyUse.setDown(false);
             if (p.isUsingItem()) mc.gameMode.releaseUsingItem(p);
-            if (previous >= 0 && inv.getSelectedSlot() == eatingSlot) inv.setSelectedSlot(previous);
+            if (previous >= 0) inv.setSelectedSlot(previous);
             eatingSlot = previous = -1;
             return;
         }
         if (!c.enabled || Compat.screenOpen(mc)) return;
         for (int i = 0; i < keys.length && i < Inventory.getSelectionSize(); i++) {
-            if (!keys[i].isDown() || !wanted(c, inv.getItem(i))) continue;
+            if (!wanted(c, inv.getItem(i)) || !(keys[i].consumeClick() || Compat.keyHeld(mc, keys[i]))) continue;
             while (keys[i].consumeClick()) { }
             previous = inv.getSelectedSlot() == i ? -1 : inv.getSelectedSlot();
             inv.setSelectedSlot(i);
